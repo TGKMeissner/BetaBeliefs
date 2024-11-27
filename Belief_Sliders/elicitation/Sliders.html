@@ -1,0 +1,73 @@
+{% extends "global/Page.html" %}
+{% load static %}
+
+{% block content %}
+<div id="plot" style="width: 100%; height: 400px;"></div>
+
+<div class="controls-container">
+    <div class="slider-container">
+        <label for="mean">Mean:</label>
+        <input type="range" min="{{ min }}" max="{{ max }}" step="0.01" id="mean" value="{{ initial_mean }}">
+        <span id="meanValue">{{ initial_mean }}</span>
+    </div>
+    <div class="slider-container">
+        <label for="variance">Variance:</label>
+        <input type="range" min="0.001" max="1" step="0.001" id="variance" value="0.001">
+        <span id="varianceValue">0.001</span>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var min = parseFloat("{{ min }}");
+        var max = parseFloat("{{ max }}");
+        var meanSlider = document.getElementById('mean');
+        var varianceSlider = document.getElementById('variance');
+        var meanValue = document.getElementById('meanValue');
+        var varianceValue = document.getElementById('varianceValue');
+        var plotDiv = document.getElementById('plot');
+
+        function updatePlot() {
+            var mean = parseFloat(meanSlider.value);
+            var variance = parseFloat(varianceSlider.value);
+            meanValue.innerHTML = mean.toFixed(2);
+            varianceValue.innerHTML = variance.toFixed(3);
+
+            var scaledMean = (mean - min) / (max - min);
+            var scaledVariance = variance / Math.pow(max - min, 2);
+
+            var alpha = scaledMean * ((scaledMean * (1 - scaledMean) / scaledVariance) - 1);
+            var beta = (1 - scaledMean) * ((scaledMean * (1 - scaledMean) / scaledVariance) - 1);
+
+            var x = [];
+            var y = [];
+            for (var i = min; i <= max; i += 0.01) {
+                var scaledX = (i - min) / (max - min);
+                x.push(i.toFixed(2));
+                y.push(jStat.beta.pdf(scaledX, alpha, beta));
+            }
+
+            var trace = {
+                x: x,
+                y: y,
+                type: 'scatter'
+            };
+
+            var layout = {
+                title: 'Beta Distribution',
+                xaxis: { title: 'Value' },
+                yaxis: { title: 'Density' }
+            };
+
+            Plotly.newPlot(plotDiv, [trace], layout);
+        }
+
+        meanSlider.addEventListener('input', updatePlot);
+        varianceSlider.addEventListener('input', updatePlot);
+
+        updatePlot();
+    });
+</script>
+{% endblock %}
