@@ -32,6 +32,11 @@
     .results-table td:last-child {
         text-align: right;
     }
+
+    .next-button-container {
+        text-align: center;
+        margin-top: 20px;
+    }
 </style>
 
 <div class="results-container">
@@ -54,6 +59,8 @@
         </tr>
     </table>
 
-    {% next_button %}
+    <div class="next-button-container">
+        {% next_button %}
+    </div>
 </div>
 {% endblock %}
