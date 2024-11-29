@@ -18,8 +18,8 @@ This application allows researchers to directly elicit participants' beliefs abo
 If you use this application for your research, please cite the following paper:
 
 **Gonzalez-Fernandez, P., Bosch-Rosa, C., & Meissner, T.**  
-*Direct Elicitation of Parametric Belief Distributions: An Application to Inflation Expectations.*  
-[https://opus4.kobv.de/opus4-hsog/frontdoor/deliver/index/docId/5604/file/BSoE_DP_0048.pdf](https://opus4.kobv.de/opus4-hsog/frontdoor/deliver/index/docId/5604/file/BSoE_DP_0048.pdf)
+
+[Direct Elicitation of Parametric Belief Distributions: An Application to Inflation Expectations.](https://opus4.kobv.de/opus4-hsog/frontdoor/deliver/index/docId/5604/file/BSoE_DP_0048.pdf)
 
 ---
 
@@ -105,11 +105,3 @@ For a detailed explanation of the methodology and application, refer to the orig
 - **Thomas Meissner**
 
 ---
-
-## **License**
-
-This project is licensed under the **MIT License**.
-
----
-
-*This application is a valuable tool for researchers investigating economic expectations and belief elicitation using parametric distributions.*
