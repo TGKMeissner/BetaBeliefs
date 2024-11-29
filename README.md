@@ -66,12 +66,6 @@ If you use this application for your research, please cite the following paper:
    http://localhost:8000
    ```
 
-3. **Create a session:**
-
-   - Click **"Create new session"**.
-   - Select **"Belief Distribution Elicitation"** from the list of available apps.
-   - Specify the number of participants and click **"Create"**.
-
 ---
 
 ## **App Structure**
@@ -82,8 +76,6 @@ If you use this application for your research, please cite the following paper:
   - `MinMaxInput.html`: Collects minimum and maximum inflation rates.
   - `Sliders.html`: Includes sliders for mean and variance adjustments with an interactive plot.
   - `Results.html`: Displays a summary of participants' responses.
-- **Static Files**:
-  - Includes **JavaScript** and **CSS** files for interactivity and styling.
 
 ---
 
