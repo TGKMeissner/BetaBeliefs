@@ -2,18 +2,150 @@
 {% load static %}
 
 {% block content %}
-<div id="plot" style="width: 100%; height: 400px;"></div>
+<style>
+    .main-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;  /* Add this to align items at the top */
+        margin-bottom: 30px;
+        margin-left: 80px;  /* Reduced margin */
+        width: 90%;        /* Increased width */
+    }
+
+    .plot-container {
+        flex: 2;
+        margin-right: 30px;  /* Increased margin */
+        border: 0.5px solid #ddd;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        background-color: white;
+        width: 550px;
+        max-width: 550px;
+        height: 400px;
+        padding: 0;        /* Remove any padding */
+        margin-top: 0;     /* Remove top margin */
+    }
+
+    .table-container {
+        flex: 1;
+        width: 420px;
+        min-width: 420px;
+        height: fit-content;    /* Changed from auto */
+        overflow-y: auto;       /* Keep for safety */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 15px;
+        margin: 0;
+        background-color: white;
+        /* Removed max-height constraint */
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;        /* Use full container width */
+        margin: 0;          /* Reset margins */
+        font-size: 12px;
+        border: none;        /* Removed table border */
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+        white-space: nowrap; /* Prevent text wrapping */
+    }
+
+    th {
+        background-color: #f2f2f2;
+        color: #333;
+        font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .controls-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .slider-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .slider-container label {
+        margin-bottom: 5px;
+        font-size: 16px;
+        font-weight: normal;
+        color: #333;
+    }
+
+    .slider-container input[type="range"] {
+        width: 500px;
+    }
+
+    .slider-container span {
+        margin-left: 5px;
+    }
+
+    .slider-labels-bottom {
+        display: flex;
+        justify-content: space-between;
+        width: 500px;
+        margin-top: 5px;
+    }
+
+    .slider-labels-bottom span {
+        font-size: 12px;
+    }
+</style>
+
+<div class="main-container" id="mainContainer">
+    <div id="plot" class="plot-container"></div>
+    <div id="tableContainer" class="table-container">
+        <table id="intervalTable">
+            <thead>
+                <tr>
+                    <th>The rate will be... </th>
+                    <th>Percentage Chance</th>
+                </tr>
+            </thead>
+            <tbody id="intervalTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <div class="controls-container">
     <div class="slider-container">
-        <label for="mean">Mean:</label>
+        <label for="mean">What do you expect the rate to be over the next twelve months?</label>
         <input type="range" min="{{ min }}" max="{{ max }}" step="0.01" id="mean" value="{{ initial_mean }}">
-        <span id="meanValue">{{ initial_mean }}</span>
+        <span id="meanValue">{{ initial_mean }}%</span>
     </div>
     <div class="slider-container">
-        <label for="variance">Variance:</label>
+        <label for="variance">How uncertain are you about the rate you have just chosen?</label>
         <input type="range" min="0.001" max="1" step="0.001" id="variance" value="0.001">
+        <div class="slider-labels-bottom">
+            <span>More certain</span>
+            <span>More uncertain</span>
+        </div>
         <span id="varianceValue">0.001</span>
+    </div>
+    <div class="slider-container">
+        <select id="toggleDropdown">
+            <option value="show">Show Table</option>
+            <option value="hide">Hide Table</option>
+        </select>
     </div>
 </div>
 
@@ -23,49 +155,184 @@
     document.addEventListener('DOMContentLoaded', function() {
         var min = parseFloat("{{ min }}");
         var max = parseFloat("{{ max }}");
+        var av = (min + max) / 2;
+        var minC = min + 0.01;
+        var maxC = max - 0.01;
+        var minCC = min + 0.0000000001;
+        var maxCC = max - 0.0000000001;
+
+        // Adjust the min and max for the first slider
+        var adjustedMin = min + 0.02 * (max - min);
+        var adjustedMax = max - 0.02 * (max - min);
+
+        // Adjust the min and max for the plot with a 1% buffer of the range
+        var buffer = 0.01 * (max - min);
+        var plotMin = min - buffer;
+        var plotMax = max + buffer;
+
         var meanSlider = document.getElementById('mean');
         var varianceSlider = document.getElementById('variance');
         var meanValue = document.getElementById('meanValue');
         var varianceValue = document.getElementById('varianceValue');
         var plotDiv = document.getElementById('plot');
 
+        function calculateMaxVariance(mean) {
+            var maxVariance;
+            if (mean > min && mean < max) {
+                if (mean > min && max > -min + 2 * mean) {
+                    maxVariance = ((max * Math.pow(min, 2) - 2 * max * min * mean - Math.pow(min, 2) * mean + max * Math.pow(mean, 2) + 2 * min * Math.pow(mean, 2) - Math.pow(mean, 3)) / (max - 2 * min + mean));
+                } else if ((mean > min && max == -min + 2 * mean) || (mean > min && mean < max && max < -min + 2 * mean)) {
+                    maxVariance = ((-Math.pow(max, 2) * min + Math.pow(max, 2) * mean + 2 * max * min * mean - 2 * max * Math.pow(mean, 2) - min * Math.pow(mean, 2) + Math.pow(mean, 3)) / (2 * max - min - mean));
+                }
+            } else {
+                maxVariance = 0;
+            }
+            return maxVariance * 0.98;
+        }
+
         function updatePlot() {
             var mean = parseFloat(meanSlider.value);
-            var variance = parseFloat(varianceSlider.value);
-            meanValue.innerHTML = mean.toFixed(2);
-            varianceValue.innerHTML = variance.toFixed(3);
+            var varianceSliderValue = parseFloat(varianceSlider.value);
+            var maxVariance = calculateMaxVariance(mean);
+            var variance = Math.pow(varianceSliderValue, 2) * maxVariance;
 
-            var scaledMean = (mean - min) / (max - min);
-            var scaledVariance = variance / Math.pow(max - min, 2);
+            if (isNaN(variance) || variance < 0) variance = 0;
 
-            var alpha = scaledMean * ((scaledMean * (1 - scaledMean) / scaledVariance) - 1);
-            var beta = (1 - scaledMean) * ((scaledMean * (1 - scaledMean) / scaledVariance) - 1);
+            var alpha = ((min - mean) * (min * max - min * mean - max * mean + Math.pow(mean, 2) + variance)) / (variance * (max - min));
+            var beta = -((max - mean) * (min * max - min * mean - max * mean + Math.pow(mean, 2) + variance)) / (variance * (max - min));
 
             var x = [];
             var y = [];
-            for (var i = min; i <= max; i += 0.01) {
-                var scaledX = (i - min) / (max - min);
-                x.push(i.toFixed(2));
-                y.push(jStat.beta.pdf(scaledX, alpha, beta));
+            var dx = 0.01;
+
+            for (var i = plotMin; i <= plotMax; i += dx) {
+                x.push(i);
+                y.push(jStat.beta.pdf((i - min) / (max - min), alpha, beta) / (max - min));
             }
 
             var trace = {
                 x: x,
                 y: y,
-                type: 'scatter'
+                type: 'line'
             };
 
             var layout = {
-                title: 'Beta Distribution',
-                xaxis: { title: 'Value' },
-                yaxis: { title: 'Density' }
+                yaxis: { showgrid: false, showticklabels: false },
+                xaxis: {
+                    title: {
+                        text: 'Rate (in percent)',
+                        font: { size: 12 }
+                    },
+                    tickfont: { size: 14 },
+                    showticklabels: true,
+                    showgrid: true,
+                    fixedrange: true
+                },
+                showlegend: false,
+                hovermode: false,
+                margin: { t: 10, l: 20, r: 20, b: 65 }
             };
 
-            Plotly.newPlot(plotDiv, [trace], layout);
+            var config = {
+                displayModeBar: false,
+                staticPlot: true
+            };
+
+            Plotly.newPlot(plotDiv, [trace], layout, config);
+            meanValue.innerHTML = mean.toFixed(2) + "%";
+            varianceValue.innerHTML = variance.toFixed(4);
+
+            updateTable(alpha, beta, x, y);
+        }
+
+        function updateTable(alpha, beta, x, y) {
+            var intervalTableBody = document.getElementById('intervalTableBody');
+            intervalTableBody.innerHTML = '';
+
+            var intervals = [
+                [max - 2 * (max - min) / 16, maxCC],
+                [max - 4 * (max - min) / 16, max - 2 * (max - min) / 16],
+                [max - 6 * (max - min) / 16, max - 4 * (max - min) / 16],
+                [max - 7 * (max - min) / 16, max - 6 * (max - min) / 16],
+                [max - 8 * (max - min) / 16, max - 7 * (max - min) / 16],
+                [max - 9 * (max - min) / 16, max - 8 * (max - min) / 16],
+                [max - 10 * (max - min) / 16, max - 9 * (max - min) / 16],
+                [max - 12 * (max - min) / 16, max - 10 * (max - min) / 16],
+                [max - 14 * (max - min) / 16, max - 12 * (max - min) / 16],
+                [minCC, max - 14 * (max - min) / 16]
+            ];
+
+            var totalPercentage = 0;
+            var percentages = [];
+            var rows = [];
+            var maxPercentage = 0;
+            var maxIndex = -1;
+
+            intervals.forEach(function(interval, index) {
+                var lower = interval[0];
+                var upper = interval[1];
+                var percentage = integratePDF(lower, upper, alpha, beta, x, y);
+                percentages.push(percentage);
+
+                if (percentage > maxPercentage) {
+                    maxPercentage = percentage;
+                    maxIndex = index;
+                }
+
+                var row = "<tr>" +
+                    "<td>...between " + lower.toFixed(2) + "% and " + upper.toFixed(2) + "%</td>" +
+                    "<td>" + percentage.toFixed(2) + "</td>" +
+                    "</tr>";
+                rows.push(row);
+                totalPercentage += percentage;
+            });
+
+            if (totalPercentage.toFixed(2) !== "100.00") {
+                var difference = 100 - totalPercentage;
+                percentages[maxIndex] += difference;
+                rows[maxIndex] = "<tr>" +
+                    "<td>...between " + intervals[maxIndex][0].toFixed(2) + "% and " + intervals[maxIndex][1].toFixed(2) + "%</td>" +
+                    "<td>" + percentages[maxIndex].toFixed(2) + "</td>" +
+                    "</tr>";
+            }
+
+            rows.forEach(function(row) {
+                intervalTableBody.innerHTML += row;
+            });
+        }
+
+        function integratePDF(lower, upper, alpha, beta, x, y) {
+            var total = 0;
+            var dx = 0.01;
+            for (var i = 0; i < x.length; i++) {
+                if (x[i] >= lower && x[i] <= upper) {
+                    total += y[i] * dx;
+                }
+            }
+            return total * 100;
+        }
+
+        function handleTableOptionChange() {
+            var tableContainer = document.getElementById('tableContainer');
+            var mainContainer = document.getElementById('mainContainer');
+            var toggleDropdown = document.getElementById('toggleDropdown');
+
+            if (toggleDropdown.value === 'show') {
+                tableContainer.style.display = 'flex';
+                mainContainer.style.justifyContent = 'space-between';
+            } else {
+                tableContainer.style.display = 'none';
+                mainContainer.style.justifyContent = 'center';
+            }
         }
 
         meanSlider.addEventListener('input', updatePlot);
         varianceSlider.addEventListener('input', updatePlot);
+        document.getElementById('toggleDropdown').addEventListener('change', handleTableOptionChange);
+        
+        meanSlider.setAttribute('min', adjustedMin);
+        meanSlider.setAttribute('max', adjustedMax);
+        meanSlider.setAttribute('value', av);
 
         updatePlot();
     });
