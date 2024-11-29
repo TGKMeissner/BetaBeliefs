@@ -1,0 +1,80 @@
+{% extends "global/Page.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    input[type="number"] {
+        width: 80px !important;
+        text-align: right;
+    }
+    
+    h4 {
+        margin-top: 14px;
+    }
+
+    .question-text {
+        text-align: left;  /* Changed from center to left */
+        margin: 20px 0;
+    }
+
+    table {
+        margin: 0 auto;
+        width: auto;
+    }
+
+    td {
+        text-align: center;
+    }
+
+    .next-button-container {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .main-content {
+        max-width: 600px;  /* Make container narrower */
+        margin: 0 auto;    /* Center the container */
+        padding: 0 20px;   /* Add some padding on sides */
+    }
+</style>
+
+<div class="main-content">
+    <div class="header">
+        <h3>Expected Inflation Range</h3>
+    </div>
+
+    <div class="question-text">
+        In your opinion, what is the <strong>lowest</strong> possible inflation rate over the next 12 months that could realistically occur, with no chance of it being any lower? This rate can be a negative number if your lowest expected rate implies deflation.
+    </div>
+
+    <table>
+        <tr>
+            <td>
+                {% formfield player.min_inflation %}
+            </td>
+            <td>
+                <h4>%</h4>
+            </td>
+        </tr>
+    </table>
+
+    <div class="question-text">
+        In your opinion, what is the <strong>highest</strong> possible inflation rate over the next 12 months that could realistically occur, with no chance of it being any higher?
+    </div>
+
+    <table>
+        <tr>
+            <td>
+                {% formfield player.max_inflation %}
+            </td>
+            <td>
+                <h4>%</h4>
+            </td>
+        </tr>
+    </table>
+
+    <div class="next-button-container">
+        {% next_button %}
+    </div>
+</div>
+{% endblock %}

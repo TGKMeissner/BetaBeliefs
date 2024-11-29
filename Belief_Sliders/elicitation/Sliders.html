@@ -2,6 +2,14 @@
 {% load static %}
 
 {% block content %}
+<!-- Add at the beginning of the content -->
+<div style="display: none">
+    {% formfield player.mean %}
+    {% formfield player.variance %}
+    {{ formfield_errors 'mean' }}
+    {{ formfield_errors 'variance' }}
+</div>
+
 <!-- CSS Styling Section -->
 <style>
     /* Main container holding plot and table side by side */
@@ -314,6 +322,10 @@
 
             // Update probability table
             updateTable(alpha, beta, x, y);
+
+            // Add to your updatePlot function, after updating the plot:
+            document.querySelector('[name="mean"]').value = mean;
+            document.querySelector('[name="variance"]').value = variance;
         }
 
         // Function to update the probability table with calculated intervals
@@ -433,4 +445,9 @@
         updatePlot();
     });
 </script>
+
+<div style="text-align: center; margin-top: 30px;">
+    {% next_button %}
+</div>
+
 {% endblock %}

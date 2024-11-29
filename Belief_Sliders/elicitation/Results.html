@@ -1,10 +1,59 @@
-{{ block title }}
-    Page title
-{{ endblock }}
+{% extends "global/Page.html" %}
+{% load static %}
 
-{{ block content }}
+{% block title %}
+<div style="text-align: center;">
+    Summary of Your Responses
+</div>
+{% endblock %}
 
-    {{ next_button }}
-{{ endblock }}
+{% block content %}
+<style>
+    .results-container {
+        max-width: 600px;
+        margin: 30px auto;
+    }
+    
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+    
+    .results-table td {
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+    
+    .results-table td:first-child {
+        font-weight: bold;
+    }
+    
+    .results-table td:last-child {
+        text-align: right;
+    }
+</style>
 
+<div class="results-container">
+    <table class="results-table">
+        <tr>
+            <td>Minimum Expected Inflation:</td>
+            <td>{{ player.min_inflation }}%</td>
+        </tr>
+        <tr>
+            <td>Maximum Expected Inflation:</td>
+            <td>{{ player.max_inflation }}%</td>
+        </tr>
+        <tr>
+            <td>Mean Expected Inflation:</td>
+            <td>{{ player.mean }}%</td>
+        </tr>
+        <tr>
+            <td>Uncertainty (Variance):</td>
+            <td>{{ player.variance }}</td>
+        </tr>
+    </table>
 
+    {% next_button %}
+</div>
+{% endblock %}
