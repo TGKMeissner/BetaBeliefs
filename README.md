@@ -41,7 +41,7 @@ If you use this application for your research, please cite the following paper:
 2. **Navigate to the project directory:**
 
    ```bash
-   cd BetaBeliefs
+   cd BetaBeliefs/Belief_Sliders
    ```
 
 3. **Install required packages:**
