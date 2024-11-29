@@ -18,7 +18,6 @@ This application allows researchers to directly elicit participants' beliefs abo
 If you use this application for your research, please cite the following paper:
 
 **Gonzalez-Fernandez, P., Bosch-Rosa, C., & Meissner, T.**  
-
 [Direct Elicitation of Parametric Belief Distributions: An Application to Inflation Expectations.](https://opus4.kobv.de/opus4-hsog/frontdoor/deliver/index/docId/5604/file/BSoE_DP_0048.pdf)
 
 ---
